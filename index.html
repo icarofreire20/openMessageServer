@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Genesys Chat Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    input {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #msg {
+      width: calc(100% - 60px);
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .chat {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      height: 320px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #fafafa;
+    }
+    .msg {
+      margin: 5px 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .me {
+      background-color: #d9eaff;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+    .agent {
+      background-color: #e1f5e1;
+      align-self: flex-start;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Genesys Open Messaging Chat</h1>
+  <div class="container">
+    <div class="input-row">
+      <input id="first" placeholder="First name" />
+      <input id="last" placeholder="Last name" />
+      <input id="id" placeholder="User ID" />
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="input-row">
+      <input id="msg" placeholder="Type your message..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const ws = new WebSocket("wss://YOUR-CODESPACE-ID-3000.app.github.dev/ws");
+    const chat = document.getElementById("chat");
+    const msgInput = document.getElementById("msg");
+    const sendBtn = document.getElementById("send");
+
+    ws.onmessage = (e) => {
+      const { from, text } = JSON.parse(e.data);
+      const div = document.createElement("div");
+      div.className = "msg agent";
+      div.textContent = `${from}: ${text}`;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    function sendMessage() {
+      const text = msgInput.value.trim();
+      if (!text) return;
+
+      const firstName = document.getElementById("first").value;
+      const lastName = document.getElementById("last").value;
+      const id = document.getElementById("id").value;
+
+      ws.send(JSON.stringify({ text, firstName, lastName, id }));
+
+      const div = document.createElement("div");
+      div.className = "msg me";
+      div.textContent = `You: ${text}`;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      msgInput.value = "";
+    }
+
+    sendBtn.onclick = sendMessage;
+
+    msgInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
